@@ -30,9 +30,9 @@ bib4llm clean path/to/library.bib [options]
 ```
 The tool uses multiprocessing to process library entries in parallel. Depending on the number of papers in all of your attachments, the initial `convert` might take some time.
 
-### Command Options
+#### Command Options
 
-#### Convert Command
+##### `convert`
 ```bash
 bib4llm convert <bibtex_file> [options]
 
@@ -44,7 +44,7 @@ Options:
   -d, --debug      Enable debug logging
 ```
 
-#### Watch Command
+##### `watch`
 ```bash
 bib4llm watch <bibtex_file> [options]
 
@@ -54,7 +54,7 @@ Options:
   -d, --debug      Enable debug logging
 ```
 
-#### Clean Command
+##### `clean`
 ```bash
 bib4llm clean <bibtex_file> [options]
 
