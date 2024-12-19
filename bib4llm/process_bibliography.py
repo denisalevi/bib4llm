@@ -9,10 +9,12 @@ import hashlib
 import sqlite3
 import bibtexparser
 import pymupdf4llm
+import pymupdf
 from dataclasses import dataclass
 from typing import Dict, List
 from tqdm.contrib.concurrent import process_map
 
+# Create logger
 logger = logging.getLogger(__name__)
 
 @dataclass
@@ -24,11 +26,13 @@ class ProcessingResult:
         file_hashes: Dictionary mapping file paths to their SHA-256 hashes
         dir_hash: Hash of the directory contents (excluding linked file contents)
         success: Whether the processing was successful
+        mupdf_warning_count: Number of MuPDF warnings encountered during processing
     """
     citation_key: str
     file_hashes: Dict[str, str]
     dir_hash: str
     success: bool
+    mupdf_warning_count: int = 0
 
 def standalone_process_entry(args):
     """Process a single bibliography entry in a separate process.
@@ -42,6 +46,7 @@ def standalone_process_entry(args):
         ProcessingResult: Object containing processing results and status
     """
     entry, output_dir = args
+    mupdf_warning_count = 0
     try:
         citation_key = entry.get('ID')
         if not citation_key:
@@ -58,11 +63,12 @@ def standalone_process_entry(args):
         logger.debug(f"File field for {citation_key}: {file_field}")
         
         # Helper functions needed by standalone_process_entry
-        def parse_file_field(file_field: str) -> List[Path]:
+        def parse_file_field(file_field: str) -> tuple[list[Path], int]:
             if not file_field:
-                return []
+                return [], 0
             
             paths = []
+            not_found = 0
             for f in file_field.split(';'):
                 try:
                     if ':' in f:
@@ -80,11 +86,12 @@ def standalone_process_entry(args):
                         logger.debug(f"Found file at: {path}")
                         paths.append(path)
                     else:
-                        logger.warning(f"Could not find file: {file_path} for citation key: {citation_key}")
+                        logger.debug(f"Could not find file: {file_path} for citation key: {citation_key}")
+                        not_found += 1
                 except Exception as e:
                     logger.error(f"Failed to parse file field entry '{f}': {e}\n{traceback.format_exc()}")
             
-            return paths
+            return paths, not_found
 
         def compute_file_hash(filepath: str) -> str:
             try:
@@ -122,7 +129,7 @@ def standalone_process_entry(args):
                     
             return hasher.hexdigest()
         
-        file_paths = parse_file_field(file_field)
+        file_paths, not_found = parse_file_field(file_field)
         
         if not file_paths:
             logger.warning(f"No files found for entry {citation_key}")
@@ -136,11 +143,17 @@ def standalone_process_entry(args):
             link_path.symlink_to(file_path.resolve())
             logger.debug(f"Created symbolic link: {link_path} -> {file_path}")
         
+        # Reset MuPDF warnings before processing files
+        pymupdf.TOOLS.reset_mupdf_warnings()
+        
         # Process files
         for file_path in file_paths:
             mime_type, _ = mimetypes.guess_type(file_path)
             
             if mime_type == 'application/pdf':
+                # Process PDF and capture warnings/errors
+                pymupdf.TOOLS.reset_mupdf_warnings()
+                
                 # Process PDF to markdown with images, using absolute paths
                 md_text = pymupdf4llm.to_markdown(
                     str(file_path.resolve()),
@@ -148,8 +161,29 @@ def standalone_process_entry(args):
                     image_path=str(entry_dir),
                     show_progress=False  # Disable pymupdf4llm progress bar
                 )
+                
+                # Check for warnings and write them to log
+                warnings = pymupdf.TOOLS.mupdf_warnings()
+                if warnings:
+                    # Combine characters into complete messages
+                    warning_messages = []
+                    current_message = []
+                    for char in warnings:
+                        if char == '\n':
+                            if current_message:
+                                warning_messages.append(''.join(current_message))
+                                current_message = []
+                        else:
+                            current_message.append(char)
+                    if current_message:
+                        warning_messages.append(''.join(current_message))
+                    
+                    mupdf_warning_count += len(warning_messages)
+                    if warning_messages:
+                        logger.debug(f"MuPDF warnings for '{file_path.name}': {";".join(warning_messages)}")
+                
                 processed_contents.append(md_text)
-                logger.info(f"Successfully processed PDF {file_path}")
+                logger.debug(f"Successfully processed PDF {file_path}")
             
             elif mime_type and mime_type.startswith('text/'):
                 # Process text files by wrapping in markdown code blocks
@@ -158,7 +192,7 @@ def standalone_process_entry(args):
                 file_type = file_path.suffix.lstrip('.')
                 md_text = f"```{file_type}\n{content}\n```"
                 processed_contents.append(md_text)
-                logger.info(f"Successfully processed text file {file_path}")
+                logger.debug(f"Successfully processed text file {file_path}")
             else:
                 logger.warning(f"Unsupported file type for {file_path}")
         
@@ -176,18 +210,51 @@ def standalone_process_entry(args):
         
         # Compute directory hash after all processing is done
         new_dir_hash = compute_dir_hash(entry_dir)
-        logger.info(f"Successfully processed entry {citation_key}")
+        logger.debug(f"Successfully processed entry {citation_key}")
+        
         return ProcessingResult(
             citation_key=citation_key,
             file_hashes=current_hashes,
             dir_hash=new_dir_hash,
-            success=True
+            success=True,
+            mupdf_warning_count=mupdf_warning_count
         )
     except Exception as e:
         logger.error(f"Failed to process entry {citation_key}: {e}\n{traceback.format_exc()}")
-        return ProcessingResult(citation_key=citation_key, file_hashes={}, dir_hash="", success=False)
+        return ProcessingResult(
+            citation_key=citation_key, 
+            file_hashes={}, 
+            dir_hash="", 
+            success=False,
+            mupdf_warning_count=mupdf_warning_count
+        )
 
 class BibliographyProcessor:
+    @staticmethod
+    def get_output_dir(bib_file: Path | str) -> Path:
+        """Get the output directory path for a bibliography file.
+        
+        Args:
+            bib_file: Path to the bibliography file
+            
+        Returns:
+            Path to the output directory
+        """
+        bib_path = Path(bib_file).resolve()
+        return (bib_path.parent / f"{bib_path.stem}-bib4llm").resolve()
+
+    @staticmethod
+    def get_log_file(bib_file: Path | str) -> Path:
+        """Get the log file path for a bibliography file.
+        
+        Args:
+            bib_file: Path to the bibliography file
+            
+        Returns:
+            Path to the log file
+        """
+        return BibliographyProcessor.get_output_dir(bib_file) / "processing.log"
+
     def __init__(self, bib_file: str, dry_run: bool = False, quiet: bool = False):
         """Initialize the bibliography processor.
         
@@ -205,7 +272,8 @@ class BibliographyProcessor:
             
         self.dry_run = dry_run
         self.quiet = quiet
-        self.output_dir = (Path.cwd() / f"{self.bib_file.stem}-bib4llm").resolve()
+        self.output_dir = self.get_output_dir(self.bib_file)
+        self.log_file = self.get_log_file(self.bib_file)
         
         if not self.dry_run:
             self.output_dir.mkdir(exist_ok=True)
@@ -315,7 +383,7 @@ class BibliographyProcessor:
                 
         return hasher.hexdigest()
 
-    def _parse_file_field(self, file_field: str) -> List[Path]:
+    def _parse_file_field(self, file_field: str) -> tuple[list[Path], int]:
         """Parse the file field from bibtex entry.
         
         Handles both standard file paths and Zotero-style file fields
@@ -325,12 +393,15 @@ class BibliographyProcessor:
             file_field: The file field string from bibtex entry
             
         Returns:
-            List[Path]: List of Path objects for files that exist on the system
+            tuple: (List[Path], int) where:
+                - List[Path] contains Path objects for files that exist
+                - int is the count of files that were not found
         """
         if not file_field:
-            return []
+            return [], 0
         
         paths = []
+        not_found = 0
         for f in file_field.split(';'):
             try:
                 if ':' in f:
@@ -348,11 +419,12 @@ class BibliographyProcessor:
                     logger.debug(f"Found file at: {path}")
                     paths.append(path)
                 else:
-                    logger.warning(f"Could not find file: {file_path}")
+                    logger.debug(f"Could not find file: {file_path}")
+                    not_found += 1
             except Exception as e:
                 logger.error(f"Failed to parse file field entry '{f}': {e}\n{traceback.format_exc()}")
         
-        return paths
+        return paths, not_found
 
     def process_all(self, force: bool = False, num_processes: int = None):
         """Process all entries in the bibliography file.
@@ -399,7 +471,8 @@ class BibliographyProcessor:
                         continue
                         
                     # Get current file hashes
-                    file_paths = self._parse_file_field(entry.get('file', ''))
+                    file_paths, missing = self._parse_file_field(entry.get('file', ''))
+                    total_missing_files = missing
                     current_hashes = {
                         str(path): self._compute_file_hash(str(path))
                         for path in file_paths
@@ -444,6 +517,7 @@ class BibliographyProcessor:
             # Update database with results
             processed = 0
             failed = 0
+            total_mupdf_warnings = 0
             for result in results:
                 if result.success:
                     cursor = self.db_conn.cursor()
@@ -455,33 +529,22 @@ class BibliographyProcessor:
                         """,
                         (result.citation_key, json.dumps(result.file_hashes), result.dir_hash)
                     )
-                    self.db_conn.commit()  # Commit after each successful entry
+                    self.db_conn.commit()
                     processed += 1
+                    total_mupdf_warnings += result.mupdf_warning_count
                 else:
                     failed += 1
             
-            logger.info(f"Processed {processed}/{total} entries successfully ({failed} failed)")
+            # After processing is complete, log summary
+            summary_parts = []
+            summary_parts.append(f"Processed {processed}/{total} entries successfully ({failed} failed)")
+            if total_mupdf_warnings > 0:
+                summary_parts.append(f"{total_mupdf_warnings} MuPDF warnings/errors occurred")
+            if total_missing_files > 0:
+                summary_parts.append(f"{total_missing_files} referenced files could not be found")
+            
+            logger.info(f"Processing complete: {', '.join(summary_parts)}. Check {self.log_file} for details.")
             
         except Exception as e:
             logger.error(f"Failed to process bibliography: {e}\n{traceback.format_exc()}")
             raise
-
-def process_bibliography(bib_file: str, force: bool = False):
-    """Process a bibliography file, converting all PDF attachments to markdown.
-    
-    Args:
-        bib_file: Path to the bibliography file to process
-        force: Whether to force reprocessing of all entries
-    """
-    with BibliographyProcessor(bib_file) as processor:
-        processor.process_all(force=force)
-
-if __name__ == '__main__':
-    import argparse
-    parser = argparse.ArgumentParser(description='Process bibliography files to markdown')
-    parser.add_argument('bib_file', help='Path to bibliography file')
-    parser.add_argument('--force', '-f', action='store_true', 
-                       help='Force reprocessing of all entries')
-    args = parser.parse_args()
-    
-    process_bibliography(args.bib_file, force=args.force)

@@ -2,21 +2,58 @@ import argparse
 import logging
 import shutil
 import multiprocessing
+import sys
+from datetime import datetime
 from pathlib import Path
 from .process_bibliography import BibliographyProcessor
 from .watcher import watch_bibtex
 
-def setup_logging(debug: bool, quiet: bool):
-    """Set up logging configuration."""
-    if quiet:
-        level = logging.WARNING
-    else:
-        level = logging.DEBUG if debug else logging.INFO
+# Create logger at module level
+logger = logging.getLogger(__name__)
+
+def setup_logging(debug: bool, quiet: bool, bibtex_file: Path, log_file: Path = None):
+    """Set up logging configuration with separate handlers for console and file.
     
-    logging.basicConfig(
-        level=level,
-        format='%(asctime)s - %(levelname)s - %(message)s'
-    )
+    Args:
+        debug: Whether to show debug messages in console
+        quiet: Whether to suppress info messages in console
+        bibtex_file: Path to the BibTeX file, used to determine log file location
+        log_file: Optional path to log file. If not provided, will use default location
+    """
+    # Configure root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG)  # Capture all levels for handlers to filter
+    
+    # Clear any existing handlers from root logger
+    root_logger.handlers.clear()
+    
+    # Console handler with level based on arguments
+    console_handler = logging.StreamHandler(sys.stdout)
+    if quiet:
+        console_handler.setLevel(logging.WARNING)
+    elif debug:
+        console_handler.setLevel(logging.DEBUG)
+    else:
+        console_handler.setLevel(logging.INFO)
+    console_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    console_handler.setFormatter(console_formatter)
+    root_logger.addHandler(console_handler)
+    
+    # File handler always at DEBUG level
+    if log_file is None:
+        # Fallback to default location if no log_file provided
+        log_dir = Path(f"{bibtex_file.stem}-bib4llm")
+        log_dir.mkdir(exist_ok=True)
+        log_file = log_dir / "processing.log"
+    else:
+        # Ensure log file's parent directory exists
+        log_file.parent.mkdir(exist_ok=True)
+        
+    file_handler = logging.FileHandler(log_file, mode='a', encoding='utf-8')
+    file_handler.setLevel(logging.DEBUG)
+    file_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+    file_handler.setFormatter(file_formatter)
+    root_logger.addHandler(file_handler)
 
 def main():
     parser = argparse.ArgumentParser(
@@ -106,8 +143,18 @@ def main():
     )
 
     args = parser.parse_args()
-    setup_logging(args.debug if hasattr(args, 'debug') else False, 
-                 args.quiet if hasattr(args, 'quiet') else False)
+    
+    # Set up logging before anything else
+    setup_logging(
+        debug=args.debug if hasattr(args, 'debug') else False,
+        quiet=args.quiet if hasattr(args, 'quiet') else False,
+        bibtex_file=args.bibtex_file,
+        log_file=BibliographyProcessor.get_log_file(args.bibtex_file)
+    )
+    
+    # Log the command that was run
+    command_line = ' '.join(sys.argv)
+    logger.debug(f"Running command: {command_line}")
 
     if args.command == 'convert':
         if args.dry_run:
@@ -119,7 +166,7 @@ def main():
     elif args.command == 'watch':
         watch_bibtex(args.bibtex_file, num_processes=args.processes)
     elif args.command == 'clean':
-        output_dir = Path(f"{args.bibtex_file.stem}-bib4llm")
+        output_dir = BibliographyProcessor.get_output_dir(args.bibtex_file)
         if output_dir.exists():
             if args.dry_run:
                 logging.info(f"Would remove output directory: {output_dir}")

@@ -15,6 +15,14 @@ BibTeX exports depending on their file path format.
 
 __version__ = "0.1.0"
 
+import pymupdf  # PyMuPDF
+# Don't display MuPDF warnings and errors as messages (they are still stored in
+# the warnings store)
+pymupdf.TOOLS.mupdf_display_warnings(False)
+pymupdf.TOOLS.mupdf_display_errors(False)
+# Don't use Python's logging system for MuPDF messages, just collect them
+#pymupdf.set_messages(False)
+
 from .process_bibliography import BibliographyProcessor
 from .watcher import watch_bibtex
 
