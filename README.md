@@ -1,9 +1,10 @@
 # bib4llm
 
-Convert your BibTeX library attachments into LLM-readable format for AI-assisted research. This tool extracts text and figures from PDFs into markdown and PNG formats, making them indexable by AI coding assistants like Cursor AI. It does not perform any RAG (Retrieval-Augmented Generation) - that's left to downstream tools (e.g. Cursor AI, which indexes the active workspace folder).
+Convert your BibTeX library attachments (with their path stored in the `file` key) into LLM-readable format for AI-assisted research. This tool extracts text and figures from PDFs into markdown and PNG formats, making them indexable by AI coding assistants like Cursor AI. It does not perform any RAG (Retrieval-Augmented Generation) - that's left to downstream tools (e.g. Cursor AI, which indexes the active workspace folder).
 
 ## Features
 
+- Reads `file` key in BibTex file to get paths of attachments
 - Extracts text and figures from PDF attachments into markdown and PNG formats using [PyMuPDF4LLM](https://pymupdf.readthedocs.io/en/latest/pymupdf4llm/)
 - Watches BibTeX file for changes and automatically updates the converted files
 - Developed with [Zotero](https://www.zotero.org/) + [BetterBibTeX](https://retorque.re/zotero-better-bibtex/) for [Cursor AI](https://www.cursor.com/) in mind, but may work with other reference managers' BibTeX exports (depending on their `file` field format) and for other LLM-based processing
