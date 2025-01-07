@@ -15,7 +15,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: OS Independent",
-    "Development Status :: 4 - Beta",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Text Processing :: Markup",
@@ -28,8 +28,8 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/yourusername/bib4llm"
-"Bug Tracker" = "https://github.com/yourusername/bib4llm/issues"
+"Homepage" = "https://github.com/denisalevi/bib4llm"
+"Bug Tracker" = "https://github.com/denisalevi/bib4llm/issues"
 
 [project.scripts]
 bib4llm = "bib4llm.cli:main" 
