@@ -207,7 +207,7 @@ def standalone_process_entry(args):
             # Write combined markdown content with citation key header
             final_content = f"# Citation Key: {citation_key}\n\n---\n\n" + '\n\n---\n\n'.join(processed_contents)
             final_md = entry_dir / f"{citation_key}.md"
-            final_md.write_text(final_content)
+            final_md.write_text(final_content, encoding='utf-8')
             
             # Compute hashes for change tracking
             current_hashes = {
