@@ -10,8 +10,9 @@ import sqlite3
 import bibtexparser
 import pymupdf4llm
 import pymupdf
+import platform
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Optional
 from tqdm.contrib.concurrent import process_map
 
 # Create logger
@@ -34,6 +35,49 @@ class ProcessingResult:
     success: bool
     mupdf_warning_count: int = 0
 
+def convert_to_extended_path(path: Path) -> Path:
+    """Convert a path to Windows extended-length format if needed.
+    
+    Args:
+        path: Path to convert
+        
+    Returns:
+        Path: Converted path with extended-length format if on Windows and needed
+    """
+    if platform.system() == 'Windows':
+        abs_path = path.resolve()
+        path_str = str(abs_path)
+        if len(path_str) > 259 and not path_str.startswith('\\\\?\\'):
+            # Convert to extended path format
+            return Path('\\\\?\\' + path_str)
+    return path
+
+def validate_windows_path(path: Path) -> Optional[str]:
+    """Validate a path for Windows compatibility.
+    
+    Args:
+        path: Path to validate
+        
+    Returns:
+        Optional[str]: Error message if path is invalid, None if valid
+    """
+    # Convert to absolute path to check total length
+    abs_path = path.resolve()
+    
+    if platform.system() == 'Windows':
+        # Check if path can be handled with extended path format
+        path_str = str(abs_path)
+        if len(path_str) > 32767:  # Maximum length even with extended paths
+            return f"Path exceeds maximum Windows extended path limit (32767 chars): {abs_path}"
+        
+        # Check for invalid characters in Windows filenames
+        invalid_chars = '<>"|?*'
+        filename = path.name
+        if any(char in filename for char in invalid_chars):
+            return f"Filename contains invalid Windows characters: {filename}"
+    
+    return None
+
 def standalone_process_entry(args):
     """Process a single bibliography entry in a separate process.
     
@@ -54,6 +98,13 @@ def standalone_process_entry(args):
             return ProcessingResult(citation_key="", file_hashes={}, dir_hash="", success=False)
         
         entry_dir = output_dir / citation_key
+        
+        # Validate output directory path
+        error = validate_windows_path(entry_dir)
+        if error:
+            logger.error(f"Invalid output directory path: {error}")
+            return ProcessingResult(citation_key=citation_key, file_hashes={}, dir_hash="", success=False)
+        
         entry_dir.mkdir(exist_ok=True, parents=True)
         processed_contents = []
         current_hashes = {}
@@ -135,21 +186,6 @@ def standalone_process_entry(args):
             logger.warning(f"No files found for entry {citation_key}")
             return ProcessingResult(citation_key=citation_key, file_hashes={}, dir_hash="", success=False)
         
-        # Create symbolic links to original files
-        for file_path in file_paths:
-            link_path = entry_dir / file_path.name
-            try:
-                if link_path.exists() or link_path.is_symlink():
-                    link_path.unlink()
-                link_path.symlink_to(file_path.resolve())
-                logger.debug(f"Created symbolic link: {link_path} -> {file_path}")
-            except OSError as e:
-                # Handle Windows symlink permission error (WinError 1314)
-                # and any other symlink-related errors gracefully
-                logger.warning(f"Could not create symbolic link for {file_path}: {e}")
-                # Continue processing without the symlink
-                continue
-        
         # Reset MuPDF warnings before processing files
         pymupdf.TOOLS.reset_mupdf_warnings()
         
@@ -161,13 +197,32 @@ def standalone_process_entry(args):
                 # Process PDF and capture warnings/errors
                 pymupdf.TOOLS.reset_mupdf_warnings()
                 
-                # Process PDF to markdown with images, using absolute paths
+                # Create a simplified link/copy of the PDF with just the citation key
+                simple_pdf = entry_dir / f"{citation_key}.pdf"
+                try:
+                    if simple_pdf.exists() or simple_pdf.is_symlink():
+                        simple_pdf.unlink()
+                    simple_pdf.symlink_to(file_path.resolve())
+                    logger.debug(f"Created symbolic link for processing: {simple_pdf} -> {file_path}")
+                except OSError as e:
+                    # If symlink fails (e.g., on Windows without admin rights), make a copy
+                    logger.debug(f"Symlink failed, creating copy instead: {e}")
+                    import shutil
+                    shutil.copy2(file_path, simple_pdf)
+                    logger.debug(f"Created copy for processing: {simple_pdf}")
+                
+                # Process PDF to markdown with images, using the simplified PDF path
                 md_text = pymupdf4llm.to_markdown(
-                    str(file_path.resolve()),
+                    str(simple_pdf),
                     write_images=True,
                     image_path=str(entry_dir),
                     show_progress=False  # Disable pymupdf4llm progress bar
                 )
+                
+                # Clean up the temporary copy if it was created (but keep symlinks)
+                if simple_pdf.exists() and not simple_pdf.is_symlink():
+                    simple_pdf.unlink()
+                    logger.debug(f"Cleaned up temporary PDF copy: {simple_pdf}")
                 
                 # Check for warnings and write them to log
                 warnings = pymupdf.TOOLS.mupdf_warnings()
@@ -207,6 +262,13 @@ def standalone_process_entry(args):
             # Write combined markdown content with citation key header
             final_content = f"# Citation Key: {citation_key}\n\n---\n\n" + '\n\n---\n\n'.join(processed_contents)
             final_md = entry_dir / f"{citation_key}.md"
+            
+            # Validate markdown output path
+            error = validate_windows_path(final_md)
+            if error:
+                logger.error(f"Invalid markdown output path: {error}")
+                return ProcessingResult(citation_key=citation_key, file_hashes={}, dir_hash="", success=False)
+            
             final_md.write_text(final_content, encoding='utf-8')
             
             # Compute hashes for change tracking
@@ -422,6 +484,14 @@ class BibliographyProcessor:
                     continue
                     
                 path = Path(file_path)
+                
+                # Validate path for Windows compatibility
+                error = validate_windows_path(path)
+                if error:
+                    logger.warning(f"Skipping invalid path: {error}")
+                    not_found += 1
+                    continue
+                
                 if path.exists():
                     logger.debug(f"Found file at: {path}")
                     paths.append(path)
