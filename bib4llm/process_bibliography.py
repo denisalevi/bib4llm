@@ -138,10 +138,17 @@ def standalone_process_entry(args):
         # Create symbolic links to original files
         for file_path in file_paths:
             link_path = entry_dir / file_path.name
-            if link_path.exists() or link_path.is_symlink():
-                link_path.unlink()
-            link_path.symlink_to(file_path.resolve())
-            logger.debug(f"Created symbolic link: {link_path} -> {file_path}")
+            try:
+                if link_path.exists() or link_path.is_symlink():
+                    link_path.unlink()
+                link_path.symlink_to(file_path.resolve())
+                logger.debug(f"Created symbolic link: {link_path} -> {file_path}")
+            except OSError as e:
+                # Handle Windows symlink permission error (WinError 1314)
+                # and any other symlink-related errors gracefully
+                logger.warning(f"Could not create symbolic link for {file_path}: {e}")
+                # Continue processing without the symlink
+                continue
         
         # Reset MuPDF warnings before processing files
         pymupdf.TOOLS.reset_mupdf_warnings()
