@@ -30,7 +30,7 @@ sed -i "s/^version = \"$current_version\"/version = \"$new_version\"/" pyproject
 
 # Stage and commit the version change
 git add pyproject.toml
-git commit -m "Bump version to $new_version"
+git commit -m "Release version v$new_version"
 
 # Create and push the new tag
 git tag "v$new_version"
