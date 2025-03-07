@@ -86,7 +86,7 @@ as wavelength (color) or frequency (pitch) and perceptual metrics such as those 
 
 -----
 
-![](/home/denis/projects/bib4llm/examples/pdf_dir-bib4llm/Cook - 2023 - A Geometric Framework for Odor Representation/Cook---2023---A-Geometric-Framework-for-Odor-Representation.pdf-2-0.png)
+![](Cook---2023---A-Geometric-Framework-for-Odor-Representation.pdf-2-0.png)
 
 MT MT MT
 
@@ -191,9 +191,9 @@ that is, odor samples are signal sparse [73] – but, perhaps more importantly, 
 5
 
 
-![](/home/denis/projects/bib4llm/examples/pdf_dir-bib4llm/Cook - 2023 - A Geometric Framework for Odor Representation/Cook---2023---A-Geometric-Framework-for-Odor-Representation.pdf-4-0.png)
+![](Cook---2023---A-Geometric-Framework-for-Odor-Representation.pdf-4-0.png)
 
-![](/home/denis/projects/bib4llm/examples/pdf_dir-bib4llm/Cook - 2023 - A Geometric Framework for Odor Representation/Cook---2023---A-Geometric-Framework-for-Odor-Representation.pdf-4-1.png)
+![](Cook---2023---A-Geometric-Framework-for-Odor-Representation.pdf-4-1.png)
 
 -----
 
@@ -953,7 +953,7 @@ these trained odors. That is, owing to local plasticity and aided by high dimens
 21
 
 
-![](/home/denis/projects/bib4llm/examples/pdf_dir-bib4llm/Cook - 2023 - A Geometric Framework for Odor Representation/Cook---2023---A-Geometric-Framework-for-Odor-Representation.pdf-20-0.png)
+![](Cook---2023---A-Geometric-Framework-for-Odor-Representation.pdf-20-0.png)
 
 **A** **B**
 

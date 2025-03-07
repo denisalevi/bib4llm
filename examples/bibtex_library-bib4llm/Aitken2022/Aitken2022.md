@@ -238,7 +238,7 @@ in a conservative estimate of the amount of drift, as a cell which does not have
 
 -----
 
-![](/home/denis/projects/bib4llm/examples/example-bib4llm/Aitken2022/Aitken2022.pdf-4-0.png)
+![](Aitken2022.pdf-4-0.png)
 
 **Fig 1. Setup of passive data and visualization of feature space representations. (a) Summary of passive data experiment. (b) Summary of response**
 vector extraction across three imaging sessions. [c-f] Visualization of feature space representations. (c) Drift of response vectors belonging to two separate
@@ -316,7 +316,7 @@ relative to full drift magnitude, see Eq (9). In yellow, the same metric if drif
 [https://doi.org/10.1371/journal.pcbi.1010716.g002](https://doi.org/10.1371/journal.pcbi.1010716.g002)
 
 
-![](/home/denis/projects/bib4llm/examples/example-bib4llm/Aitken2022/Aitken2022.pdf-5-0.png)
+![](Aitken2022.pdf-5-0.png)
 
 -----
 
@@ -394,7 +394,7 @@ rotation. The purple dotted line is again the average angle found between drift 
 [https://doi.org/10.1371/journal.pcbi.1010716.g003](https://doi.org/10.1371/journal.pcbi.1010716.g003)
 
 
-![](/home/denis/projects/bib4llm/examples/example-bib4llm/Aitken2022/Aitken2022.pdf-7-0.png)
+![](Aitken2022.pdf-7-0.png)
 
 -----
 
@@ -487,7 +487,7 @@ N2, differs for each mouse. Across Δt values, we find many of the same drift ch
 
 -----
 
-![](/home/denis/projects/bib4llm/examples/example-bib4llm/Aitken2022/Aitken2022.pdf-10-0.png)
+![](Aitken2022.pdf-10-0.png)
 
 **Fig 4. Behavioral data: Experimental setup and drift geometry. (a) Summary of experimental setup. (b) Summary of session ordering, trial types,**
 and extraction of response vectors from dF/F values. Bottom plot shows dF/F values over time, with colored columns representing image flashes
@@ -601,7 +601,7 @@ long as Δt is large compared to the time scale of the noise. Additionally, the 
 
 -----
 
-![](/home/denis/projects/bib4llm/examples/example-bib4llm/Aitken2022/Aitken2022.pdf-13-0.png)
+![](Aitken2022.pdf-13-0.png)
 
 **Fig 5. Artificial neural networks: Hyperparameter fits and drift geometry as a function of Δt and variance explained. (a) Measure of fit to**
 experimental data, Ztotal see Eq (19), as a function of noise hyperparameters, p (top labels) or σ (bottom labels). Dots are best fits, for which additional
@@ -675,7 +675,7 @@ be fairly misaligned from one another, on average 71 (±3) degrees (mean ± s.e.
 
 -----
 
-![](/home/denis/projects/bib4llm/examples/example-bib4llm/Aitken2022/Aitken2022.pdf-15-0.png)
+![](Aitken2022.pdf-15-0.png)
 
 **Fig 6. Artificial neural networks: Additional properties of drift geometry. [a-d] Various quantities as a function of relative/absolute training time**
 (in epochs). Means are shown as dark lines, with 95% confidence intervals shaded behind. Raw data is scattered behind. (a) Angle between SVC
