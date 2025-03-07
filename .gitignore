@@ -36,3 +36,14 @@ venv.bak/
 *.swp
 *.swo
 .aider*
+
+# Testing
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+coverage.xml
+*.cover
+
+examples/example-bib4llm/processed_files.db
+examples/example-bib4llm/processing.log

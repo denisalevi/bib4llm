@@ -27,9 +27,22 @@ dependencies = [
     "tqdm",      # for progress bars
 ]
 
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov",
+    "pytest-xdist",  # for parallel test execution
+]
+
 [project.urls]
 "Homepage" = "https://github.com/denisalevi/bib4llm"
 "Bug Tracker" = "https://github.com/denisalevi/bib4llm/issues"
 
 [project.scripts]
-bib4llm = "bib4llm.cli:main" 
+bib4llm = "bib4llm.cli:main"
+
+[tool.pytest]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*" 

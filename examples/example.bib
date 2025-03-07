@@ -1,0 +1,48 @@
+@inproceedings{Chaudhari2018,
+  title = {Stochastic {{Gradient Descent Performs Variational Inference}}, {{Converges}} to {{Limit Cycles}} for {{Deep Networks}}},
+  booktitle = {2018 {{Information Theory}} and {{Applications Workshop}} ({{ITA}})},
+  author = {Chaudhari, Pratik and Soatto, Stefano},
+  year = {2018},
+  month = feb,
+  pages = {1--10},
+  doi = {10.1109/ITA.2018.8503224},
+  urldate = {2024-12-10},
+  abstract = {Stochastic gradient descent (SGD) is widely believed to perform implicit regularization when used to train deep neural networks, but the precise manner in which this occurs has thus far been elusive. We prove that SGD minimizes an average potential over the posterior distribution of weights along with an entropic regularization term. This potential is however not the original loss function in general. So SGD does perform variational inference, but for a different loss than the one used to compute the gradients. Even more surprisingly, SGD does not even converge in the classical sense: we show that the most likely trajectories of SGD for deep networks do not behave like Brownian motion around critical points. Instead, they resemble closed loops with deterministic components. We prove that such ``out-of-equilibrium'' behavior is a consequence of highly nonisotropic gradient noise in SGD; the covariance matrix of mini-batch gradients for deep networks has a rank as small as 1\% of its dimension. We provide extensive empirical validation of these claims. This article summarizes the findings in [1]. See the longer version for background, detailed results and proofs.},
+  keywords = {Entropy,Force,Limit-cycles,Mathematical model,representational drift,SGD,Steady-state,Temperature,Trajectory},
+  file = {pdf_dir/Chaudhari - 2018 - Stochastic Gradient Descent Performs Variational Inference, Converges to Limit Cycles for Deep Netwo 1.pdf;pdf_dir/Chaudhari - 2018 - Stochastic Gradient Descent Performs Variational Inference, Converges to Limit Cycles for Deep Netwo.pdf}
+}
+
+@misc{Cook2023,
+  title = {A {{Geometric Framework}} for {{Odor Representation}}},
+  author = {Cook, Jack A. and Cleland, Thomas A.},
+  year = {2023},
+  month = oct,
+  number = {arXiv:2208.07455},
+  eprint = {2208.07455},
+  publisher = {arXiv},
+  doi = {10.48550/arXiv.2208.07455},
+  urldate = {2024-12-03},
+  abstract = {We present a generalized theoretical framework for olfactory representation and plasticity, using the theory of smooth manifolds and sheaves to depict categorical odor learning via distributed neural computation. Beginning with the space of all possible inputs to the olfactory system, we develop a dynamic model for odor learning that culminates in a perceptual space in which categorical odor representations are hierarchically constructed through experience, exhibiting statistically appropriate consequential regions and clear relationships between the broader and narrower identities to which a given odor might be assigned. The model reflects both the sampling-based physical similarity relationships among odorants, as observed in physiological receptor response profiles, and the acquired, learning-dependent perceptual similarity relationships among odors that can be measured behaviorally, and defines the relationship between them. Individual training and experience generates correspondingly more sophisticated odor identification capabilities. Because these odor representations are constructed from experience and depend on local, distributed plasticity mechanisms, geometries that fix curvature are insufficient to describe the capabilities of the system. This generative framework also encompasses hypotheses explaining representational drift in postbulbar circuits and the context-dependent remapping of perceptual similarity relationships.},
+  archiveprefix = {arXiv},
+  keywords = {geometry,model,odor,odor representation,Quantitative Biology - Neurons and Cognition,representation,representational drift,theory,to-read},
+  file = {pdf_dir/Cook - 2023 - A Geometric Framework for Odor Representation.pdf}
+}
+
+@article{Aitken2022,
+  title = {The Geometry of Representational Drift in Natural and Artificial Neural Networks},
+  author = {Aitken, Kyle and Garrett, Marina and Olsen, Shawn and Mihalas, Stefan},
+  year = {2022},
+  month = nov,
+  journal = {PLOS Computational Biology},
+  volume = {18},
+  number = {11},
+  pages = {e1010716},
+  publisher = {Public Library of Science},
+  issn = {1553-7358},
+  doi = {10.1371/journal.pcbi.1010716},
+  urldate = {2023-02-06},
+  abstract = {Neurons in sensory areas encode/represent stimuli. Surprisingly, recent studies have suggested that, even during persistent performance, these representations are not stable and change over the course of days and weeks. We examine stimulus representations from fluorescence recordings across hundreds of neurons in the visual cortex using in vivo two-photon calcium imaging and we corroborate previous studies finding that such representations change as experimental trials are repeated across days. This phenomenon has been termed ``representational drift''. In this study we geometrically characterize the properties of representational drift in the primary visual cortex of mice in two open datasets from the Allen Institute and propose a potential mechanism behind such drift. We observe representational drift both for passively presented stimuli, as well as for stimuli which are behaviorally relevant. Across experiments, the drift differs from in-session variance and most often occurs along directions that have the most in-class variance, leading to a significant turnover in the neurons used for a given representation. Interestingly, despite this significant change due to drift, linear classifiers trained to distinguish neuronal representations show little to no degradation in performance across days. The features we observe in the neural data are similar to properties of artificial neural networks where representations are updated by continual learning in the presence of dropout, i.e. a random masking of nodes/weights, but not other types of noise. Therefore, we conclude that a potential reason for the representational drift in biological networks is driven by an underlying dropout-like noise while continuously learning and that such a mechanism may be computational advantageous for the brain in the same way it is for artificial neural networks, e.g. preventing overfitting.},
+  langid = {english},
+  keywords = {_tablet,Animal behavior,Artificial neural networks,Behavior,Linear regression analysis,Mice,Neurons,Vector spaces,Visual cortex},
+  file = {pdf_dir/subfolder/Aitken - 2022 - The geometry of representational drift in natural and artificial neural networks.pdf}
+}

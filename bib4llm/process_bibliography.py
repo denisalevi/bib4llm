@@ -517,6 +517,7 @@ class BibliographyProcessor:
             # Determine which entries need processing
             entries_to_process = []
             total = len(bib_database.entries)
+            total_missing_files = 0
             
             if self.dry_run:
                 # In dry-run mode, show all entries that would be processed
@@ -527,7 +528,8 @@ class BibliographyProcessor:
                         continue
                     
                     file_field = entry.get('file', '')
-                    file_paths = self._parse_file_field(file_field)
+                    file_paths, missing = self._parse_file_field(file_field)
+                    total_missing_files += missing
                     if file_paths:
                         logger.info(f"Would process {citation_key}:")
                         for path in file_paths:
@@ -535,6 +537,10 @@ class BibliographyProcessor:
                                 logger.info(f"  - {path}")
                             else:
                                 logger.warning(f"  - {path} (not found)")
+                
+                # Log summary for dry run
+                if total_missing_files > 0:
+                    logger.warning(f"{total_missing_files} referenced files could not be found")
                 return
             
             if force:
@@ -549,7 +555,7 @@ class BibliographyProcessor:
                         
                     # Get current file hashes
                     file_paths, missing = self._parse_file_field(entry.get('file', ''))
-                    total_missing_files = missing
+                    total_missing_files += missing
                     current_hashes = {
                         str(path): self._compute_file_hash(str(path))
                         for path in file_paths
