@@ -11,6 +11,11 @@ The tool focuses solely on content extraction:
 
 Developed with Zotero + BetterBibTeX in mind, but may work with other reference managers'
 BibTeX exports depending on their file path format.
+
+Now also supports:
+- Direct processing of individual PDF files
+- Processing entire directories of PDFs and BibTeX files
+- Recursive directory scanning and watching
 """
 
 __version__ = "0.1.0"
@@ -23,7 +28,13 @@ pymupdf.TOOLS.mupdf_display_errors(False)
 # Don't use Python's logging system for MuPDF messages, just collect them
 #pymupdf.set_messages(False)
 
-from .process_bibliography import BibliographyProcessor
-from .watcher import watch_bibtex
+from .process_bibliography import BibliographyProcessor, DirectoryProcessor
+from .watcher import watch_bibtex, watch_pdf, watch_directory
 
-__all__ = ['BibliographyProcessor', 'watch_bibtex'] 
+__all__ = [
+    'BibliographyProcessor',
+    'DirectoryProcessor',
+    'watch_bibtex',
+    'watch_pdf', 
+    'watch_directory'
+] 

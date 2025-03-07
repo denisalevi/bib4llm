@@ -1,4 +1,4 @@
-"""Test the conversion of example.bib and compare with example-bib4llm."""
+"""Test the conversion of bibtex_library.bib and compare with bibtex_library-bib4llm."""
 
 import unittest
 import tempfile
@@ -53,7 +53,7 @@ def compare_directories(dcmp, differences=None):
 
 
 class TestExampleConversion(unittest.TestCase):
-    """Test the conversion of example.bib and compare with example-bib4llm."""
+    """Test the conversion of bibtex_library.bib and compare with bibtex_library-bib4llm."""
 
     def setUp(self):
         """Set up the test environment."""
@@ -68,13 +68,13 @@ class TestExampleConversion(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp()
         
         # Path to the example.bib file
-        self.example_bib = Path("examples/example.bib")
+        self.example_bib = Path("examples/bibtex_library.bib")
         
         # Path to the example-bib4llm directory
-        self.example_output = Path("examples/example-bib4llm")
+        self.example_output = Path("examples/bibtex_library-bib4llm")
         
         # Copy the example.bib file to the temporary directory
-        self.temp_bib = Path(self.temp_dir) / "example.bib"
+        self.temp_bib = Path(self.temp_dir) / "bibtex_library.bib"
         shutil.copy2(self.example_bib, self.temp_bib)
         
         # Copy the PDF files to maintain the same structure
@@ -109,16 +109,15 @@ class TestExampleConversion(unittest.TestCase):
 
     def test_example_conversion(self):
         """
-        Test that converting example.bib produces output similar to example-bib4llm.
+        Test that converting bibtex_library.bib produces output similar to bibtex_library-bib4llm.
         
         This test:
-        1. Copies example.bib to a temporary directory
-        2. Runs the conversion on it
-        3. Compares the output structure with example-bib4llm
-        4. Cleans up the temporary directory
+        1. Copies bibtex_library.bib to a temporary directory
+        2. Runs the conversion
+        3. Compares the output structure with bibtex_library-bib4llm
         """
         # Get the expected output directory
-        expected_output_dir = Path(self.temp_dir) / "example-bib4llm"
+        expected_output_dir = Path(self.temp_dir) / "bibtex_library-bib4llm"
         
         # Ensure the output directory exists
         expected_output_dir.mkdir(exist_ok=True)
@@ -205,7 +204,7 @@ class TestExampleConversion(unittest.TestCase):
         if filtered_diff_files:
             print(f"Different files: {filtered_diff_files}")
         if differences['left_only']:
-            print(f"Files only in example-bib4llm: {differences['left_only']}")
+            print(f"Files only in bibtex_library-bib4llm: {differences['left_only']}")
         if differences['right_only']:
             print(f"Files only in generated output: {differences['right_only']}")
         

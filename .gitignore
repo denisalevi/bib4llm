@@ -45,5 +45,5 @@ htmlcov/
 coverage.xml
 *.cover
 
-examples/example-bib4llm/processed_files.db
-examples/example-bib4llm/processing.log
+examples/bibtex_library-bib4llm/processed_files.db
+examples/bibtex_library-bib4llm/processing.log

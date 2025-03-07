@@ -168,9 +168,9 @@ class TestBibliographyProcessor(unittest.TestCase):
         """Test initialization of BibliographyProcessor."""
         processor = BibliographyProcessor(self.bib_file)
         self.assertEqual(
-            processor.bib_file,
+            processor.input_path,
             self.bib_file,
-            f"BibliographyProcessor.bib_file should match the input file, got '{processor.bib_file}'",
+            f"BibliographyProcessor.input_path should match the input file, got '{processor.input_path}'",
         )
         self.assertEqual(
             processor.output_dir.name,
@@ -197,9 +197,9 @@ class TestBibliographyProcessor(unittest.TestCase):
         """Test initialization of BibliographyProcessor with dry_run=True."""
         processor = BibliographyProcessor(self.bib_file, dry_run=True)
         self.assertEqual(
-            processor.bib_file,
+            processor.input_path,
             self.bib_file,
-            f"BibliographyProcessor.bib_file should match the input file, got '{processor.bib_file}'",
+            f"BibliographyProcessor.input_path should match the input file, got '{processor.input_path}'",
         )
         self.assertEqual(
             processor.output_dir.name,
@@ -219,9 +219,9 @@ class TestBibliographyProcessor(unittest.TestCase):
         """Test the context manager functionality."""
         with BibliographyProcessor(self.bib_file) as processor:
             self.assertEqual(
-                processor.bib_file,
+                processor.input_path,
                 self.bib_file,
-                f"BibliographyProcessor.bib_file should match the input file, got '{processor.bib_file}'",
+                f"BibliographyProcessor.input_path should match the input file, got '{processor.input_path}'",
             )
             self.assertEqual(
                 processor.output_dir.name,
