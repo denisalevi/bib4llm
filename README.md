@@ -5,7 +5,7 @@ Convert your PDF library into LLM-readable format for AI-assisted research. This
 ## Features
 
 - Reads PDF files in directory or `file` key in BibTex file to get paths of attachments
-- Extracts text and figures from PDF attachments into markdown and PNG formats using [PyMuPDF4LLM](https://pymupdf.readthedocs.io/en/latest/pymupdf4llm/)
+- Extracts text and figures from PDF attachments into markdown and PNG formats using [PyMuPDF4LLM](https://pymupdf.readthedocs.io/en/latest/pymupdf4llm/) (see [examples](examples))
 - Watches directories or BibTeX files for changes and automatically updates the converted files
 - Developed with [Zotero](https://www.zotero.org/) + [BetterBibTeX](https://retorque.re/zotero-better-bibtex/) for [Cursor AI](https://www.cursor.com/) in mind, but may work with other reference managers' BibTeX exports (depending on their `file` field format) and for other LLM-based processing
 
