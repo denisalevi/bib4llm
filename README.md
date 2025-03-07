@@ -86,7 +86,7 @@ Options:
   -n, --dry-run         Show what would be removed without actually doing it
 ```
 
-### Recommended Setup with Zotero for Cursor AI
+### Setup with Zotero for Cursor AI
 
 1. Install Zotero and the BetterBibTeX extension
 2. Create a collection for your project papers
@@ -97,40 +97,6 @@ Options:
    ```bash
    bib4llm watch path/to/library.bib
    ```
-
-### Direct PDF Processing
-
-To process a single PDF file without using a BibTeX file:
-
-```bash
-# One-time processing
-bib4llm convert path/to/paper.pdf
-
-# Watch for changes
-bib4llm watch path/to/paper.pdf
-```
-
-The extracted content will be placed in a directory named after the PDF file with a `-bib4llm` suffix (e.g., `paper-bib4llm/` for `paper.pdf`).
-
-### Directory Processing
-
-To process multiple files in a directory:
-
-```bash
-# One-time processing of all PDFs and BibTeX files in a directory (recursive by default)
-bib4llm convert path/to/pdf_dir/
-
-# One-time processing of only the files in the top-level directory (non-recursive)
-bib4llm convert path/to/pdf_dir/ --no-recursive
-
-# Watch for changes in a directory (including new files)
-bib4llm watch path/to/pdf_dir/
-
-# Watch for changes only in the top-level directory (non-recursive)
-bib4llm watch path/to/pdf_dir/ --no-recursive
-```
-
-The converted files will be stored in directories named after each source file with a `-bib4llm` suffix. These directories can be indexed by Cursor AI or other tools for enhanced context during development.
 
 ### Output Directory Structure
 
