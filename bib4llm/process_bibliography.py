@@ -242,7 +242,7 @@ def standalone_process_entry(args):
                     
                     mupdf_warning_count += len(warning_messages)
                     if warning_messages:
-                        logger.debug(f"MuPDF warnings for '{file_path.name}': {";".join(warning_messages)}")
+                        logger.debug(f"MuPDF warnings for '{file_path.name}': {';'.join(warning_messages)}")
                 
                 processed_contents.append(md_text)
                 logger.debug(f"Successfully processed PDF {file_path}")
@@ -633,7 +633,7 @@ class BibliographyProcessor:
             
             mupdf_warning_count = len(warning_messages)
             if warning_messages:
-                logger.debug(f"MuPDF warnings for '{pdf_path.name}': {";".join(warning_messages)}")
+                logger.debug(f"MuPDF warnings for '{pdf_path.name}': {';'.join(warning_messages)}")
         
         # Write output markdown file
         final_content = f"# Citation Key: {citation_key}\n\n---\n\n{md_text}"
@@ -1077,7 +1077,7 @@ class DirectoryProcessor:
             
             mupdf_warning_count = len(warning_messages)
             if warning_messages:
-                logger.debug(f"MuPDF warnings for '{pdf_path.name}': {";".join(warning_messages)}")
+                logger.debug(f"MuPDF warnings for '{pdf_path.name}': {';'.join(warning_messages)}")
         
         # Write output markdown file
         final_content = f"# Citation Key: {citation_key}\n\n---\n\n{md_text}"
