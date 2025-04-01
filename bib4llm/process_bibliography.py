@@ -82,14 +82,21 @@ def standalone_process_entry(args):
     """Process a single bibliography entry in a separate process.
     
     Args:
-        args: Tuple of (entry, output_dir)
+        args: Tuple of (entry, output_dir, bib_file_path=None)
             entry: Dictionary containing the bibliography entry data
             output_dir: Path to the output directory
+            bib_file_path: Optional Path to the BibTeX file (to resolve relative paths)
             
     Returns:
         ProcessingResult: Object containing processing results and status
     """
-    entry, output_dir = args
+    # Unpack arguments, handling the case where bib_file_path might not be provided
+    if len(args) == 3:
+        entry, output_dir, bib_file_path = args
+    else:
+        entry, output_dir = args
+        bib_file_path = None
+        
     mupdf_warning_count = 0
     try:
         citation_key = entry.get('ID')
@@ -132,7 +139,22 @@ def standalone_process_entry(args):
                     if not file_path:
                         continue
                         
+                    # Create path object and check if it's absolute
                     path = Path(file_path)
+                    
+                    # If the path is absolute, use it directly
+                    if path.is_absolute():
+                        logger.debug(f"Using absolute path: {path}")
+                    # If it's relative and we have a bibliography file, try resolving relative to that
+                    elif bib_file_path:
+                        bib_dir = Path(bib_file_path).parent
+                        path = (bib_dir / file_path).resolve()
+                        logger.debug(f"Resolved relative path to: {path}")
+                    # As a last resort, try relative to current working directory
+                    else:
+                        path = (Path.cwd() / file_path).resolve()
+                        logger.debug(f"Using path relative to current directory: {path}")
+                    
                     if path.exists():
                         logger.debug(f"Found file at: {path}")
                         paths.append(path)
@@ -188,7 +210,7 @@ def standalone_process_entry(args):
         
         # Reset MuPDF warnings before processing files
         pymupdf.TOOLS.reset_mupdf_warnings()
-        
+
         # Process files
         for file_path in file_paths:
             mime_type, _ = mimetypes.guess_type(file_path)
@@ -505,7 +527,17 @@ class BibliographyProcessor:
                 if not file_path:
                     continue
                     
+                # Create path object and check if it's absolute
                 path = Path(file_path)
+                
+                # If the path is absolute, use it directly
+                if path.is_absolute():
+                    logger.debug(f"Using absolute path: {path}")
+                # If it's relative and we have a bibliography file, try resolving relative to that
+                elif hasattr(self, 'input_path') and self.input_path.exists():
+                    bib_dir = self.input_path.parent
+                    path = (bib_dir / file_path).resolve()
+                    logger.debug(f"Resolved relative path to: {path}")
                 
                 # Validate path for Windows compatibility
                 error = validate_windows_path(path)
@@ -782,7 +814,7 @@ class BibliographyProcessor:
             # Process entries using process_map with progress bar
             results = process_map(
                 standalone_process_entry,
-                [(entry, self.output_dir) for entry in entries_to_process],
+                [(entry, self.output_dir, self.input_path) for entry in entries_to_process],
                 max_workers=num_processes,
                 desc="Processing library",
                 unit="entry"
