@@ -106,6 +106,12 @@ def main():
         action='store_true',
         help="Disable recursive processing of directories (only applicable if input is a directory)"
     )
+    convert_parser.add_argument(
+        '--no-images', '--text-only',
+        dest='no_images',
+        action='store_true',
+        help="Skip rendering per-page images (PNGs); extract text/markdown only. Much faster."
+    )
 
     # Watch command
     watch_parser = subparsers.add_parser(
@@ -184,14 +190,16 @@ def main():
                 processor.process_directory(
                     recursive=not args.no_recursive,
                     force=args.force if hasattr(args, 'force') else False,
-                    num_processes=args.processes
+                    num_processes=args.processes,
+                    write_images=not getattr(args, 'no_images', False)
                 )
             else:
                 processor = DirectoryProcessor(input_path, quiet=args.quiet)
                 processor.process_directory(
                     recursive=not args.no_recursive,
                     force=args.force if hasattr(args, 'force') else False,
-                    num_processes=args.processes
+                    num_processes=args.processes,
+                    write_images=not getattr(args, 'no_images', False)
                 )
         elif args.command == 'watch':
             watch_directory(
@@ -208,10 +216,16 @@ def main():
         if args.command == 'convert':
             if args.dry_run:
                 with BibliographyProcessor(input_path, dry_run=True, quiet=args.quiet) as processor:
-                    processor.process_all(force=args.force if hasattr(args, 'force') else False)
+                    processor.process_all(
+                        force=args.force if hasattr(args, 'force') else False,
+                        write_images=not getattr(args, 'no_images', False)
+                    )
             else:
                 with BibliographyProcessor(input_path, quiet=args.quiet) as processor:
-                    processor.process_all(force=args.force if hasattr(args, 'force') else False)
+                    processor.process_all(
+                        force=args.force if hasattr(args, 'force') else False,
+                        write_images=not getattr(args, 'no_images', False)
+                    )
         elif args.command == 'watch':
             watch_pdf(input_path, num_processes=args.processes)
         elif args.command == 'clean':
@@ -232,13 +246,15 @@ def main():
                 with BibliographyProcessor(input_path, dry_run=True, quiet=args.quiet) as processor:
                     processor.process_all(
                         force=args.force if hasattr(args, 'force') else False,
-                        num_processes=args.processes
+                        num_processes=args.processes,
+                        write_images=not getattr(args, 'no_images', False)
                     )
             else:
                 with BibliographyProcessor(input_path, quiet=args.quiet) as processor:
                     processor.process_all(
                         force=args.force if hasattr(args, 'force') else False,
-                        num_processes=args.processes
+                        num_processes=args.processes,
+                        write_images=not getattr(args, 'no_images', False)
                     )
         elif args.command == 'watch':
             watch_bibtex(input_path, num_processes=args.processes)

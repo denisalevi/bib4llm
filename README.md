@@ -59,6 +59,8 @@ Options:
   -q, --quiet           Suppress all output except warnings and errors
   -d, --debug           Enable debug logging
   -R, --no-recursive    Disable recursive processing of directories (only applicable if input is a directory)
+  --no-images, --text-only
+                        Skip rendering per-page images (PNGs); extract text/markdown only (much faster)
 ```
 
 ##### `watch`

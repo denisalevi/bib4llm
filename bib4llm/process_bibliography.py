@@ -82,21 +82,26 @@ def standalone_process_entry(args):
     """Process a single bibliography entry in a separate process.
     
     Args:
-        args: Tuple of (entry, output_dir, bib_file_path=None)
+        args: Tuple of (entry, output_dir, bib_file_path=None, write_images=True)
             entry: Dictionary containing the bibliography entry data
             output_dir: Path to the output directory
             bib_file_path: Optional Path to the BibTeX file (to resolve relative paths)
-            
+            write_images: Whether to render/write per-page images (PNGs). If False,
+                only text/markdown is extracted (much faster).
+
     Returns:
         ProcessingResult: Object containing processing results and status
     """
-    # Unpack arguments, handling the case where bib_file_path might not be provided
-    if len(args) == 3:
+    # Unpack arguments, handling optional bib_file_path and write_images
+    write_images = True
+    if len(args) == 4:
+        entry, output_dir, bib_file_path, write_images = args
+    elif len(args) == 3:
         entry, output_dir, bib_file_path = args
     else:
         entry, output_dir = args
         bib_file_path = None
-        
+
     mupdf_warning_count = 0
     try:
         citation_key = entry.get('ID')
@@ -233,10 +238,11 @@ def standalone_process_entry(args):
                     shutil.copy2(file_path, simple_pdf)
                     logger.debug(f"Created copy for processing: {simple_pdf}")
                 
-                # Process PDF to markdown with images, using the simplified PDF path
+                # Process PDF to markdown, using the simplified PDF path. When write_images
+                # is False, per-page images are not rendered (text/markdown only, much faster).
                 md_text = pymupdf4llm.to_markdown(
                     str(simple_pdf),
-                    write_images=True,
+                    write_images=write_images,
                     image_path=str(entry_dir),
                     show_progress=False  # Disable pymupdf4llm progress bar
                 )
@@ -557,14 +563,17 @@ class BibliographyProcessor:
         
         return paths, not_found
 
-    def process_pdf(self, pdf_path: Path, force: bool = False, citation_key: str = None) -> ProcessingResult:
+    def process_pdf(self, pdf_path: Path, force: bool = False, citation_key: str = None,
+                    write_images: bool = True) -> ProcessingResult:
         """Process a single PDF file directly (no BibTeX entry).
-        
+
         Args:
             pdf_path: Path to the PDF file
             force: Whether to force reprocessing
             citation_key: Optional citation key to use (default: file stem)
-            
+            write_images: Whether to render/write per-page images (PNGs). If False,
+                only text/markdown is extracted (much faster).
+
         Returns:
             ProcessingResult: Object containing processing results and status
         """
@@ -634,10 +643,10 @@ class BibliographyProcessor:
             shutil.copy2(pdf_path, simple_pdf)
             logger.debug(f"Created copy for processing: {simple_pdf}")
         
-        # Process PDF to markdown with images
+        # Process PDF to markdown (images only when write_images is True)
         md_text = pymupdf4llm.to_markdown(
             str(simple_pdf),
-            write_images=True,
+            write_images=write_images,
             image_path=str(entry_dir),
             show_progress=False  # Disable pymupdf4llm progress bar
         )
@@ -708,20 +717,22 @@ class BibliographyProcessor:
             mupdf_warning_count=mupdf_warning_count
         )
 
-    def process_all(self, force: bool = False, num_processes: int = None):
+    def process_all(self, force: bool = False, num_processes: int = None, write_images: bool = True):
         """Process all entries in the bibliography file or a single PDF.
-        
+
         Args:
             force: Whether to force reprocessing of all entries
             num_processes: Number of parallel processes to use (default: number of CPU cores)
+            write_images: Whether to render/write per-page images (PNGs). If False,
+                only text/markdown is extracted (much faster).
         """
         if self.is_pdf:
             # Process a single PDF file
             if self.dry_run:
                 logger.info(f"Would process PDF: {self.input_path}")
                 return
-                
-            result = self.process_pdf(self.input_path, force=force)
+
+            result = self.process_pdf(self.input_path, force=force, write_images=write_images)
             
             if result.success:
                 logger.info(f"Successfully processed PDF: {self.input_path}")
@@ -814,7 +825,7 @@ class BibliographyProcessor:
             # Process entries using process_map with progress bar
             results = process_map(
                 standalone_process_entry,
-                [(entry, self.output_dir, self.input_path) for entry in entries_to_process],
+                [(entry, self.output_dir, self.input_path, write_images) for entry in entries_to_process],
                 max_workers=num_processes,
                 desc="Processing library",
                 unit="entry"
@@ -909,14 +920,17 @@ class DirectoryProcessor:
         
         return bibtex_files, pdf_files
     
-    def process_directory(self, recursive: bool = True, force: bool = False, num_processes: int = None) -> Dict:
+    def process_directory(self, recursive: bool = True, force: bool = False, num_processes: int = None,
+                          write_images: bool = True) -> Dict:
         """Process all BibTeX and PDF files in the directory.
-        
+
         Args:
             recursive: Whether to recurse into subdirectories
             force: Whether to force reprocessing of all entries
             num_processes: Number of parallel processes to use
-            
+            write_images: Whether to render/write per-page images (PNGs). If False,
+                only text/markdown is extracted (much faster).
+
         Returns:
             Dict: Summary of processing results
         """
@@ -949,7 +963,7 @@ class DirectoryProcessor:
                 try:
                     # For BibTeX files, we use the standard BibliographyProcessor
                     with BibliographyProcessor(bib_file, dry_run=self.dry_run, quiet=self.quiet) as processor:
-                        processor.process_all(force=force, num_processes=num_processes)
+                        processor.process_all(force=force, num_processes=num_processes, write_images=write_images)
                     bibtex_processed += 1
                 except Exception as e:
                     logger.error(f"Failed to process BibTeX file {bib_file}: {e}\n{traceback.format_exc()}")
@@ -975,7 +989,7 @@ class DirectoryProcessor:
                     pdf_output_dir.mkdir(exist_ok=True, parents=True)
                     
                     # Add to processing arguments
-                    pdf_args.append((pdf_file, pdf_output_dir, force))
+                    pdf_args.append((pdf_file, pdf_output_dir, force, write_images))
                 except Exception as e:
                     logger.error(f"Failed to prepare PDF file {pdf_file}: {e}\n{traceback.format_exc()}")
                     pdf_failed += 1
@@ -1011,16 +1025,20 @@ class DirectoryProcessor:
     
     def _process_pdf_wrapper(self, args):
         """Wrapper for _process_pdf to use with process_map.
-        
+
         Args:
-            args: Tuple of (pdf_path, output_dir, force)
-            
+            args: Tuple of (pdf_path, output_dir, force, write_images=True)
+
         Returns:
             ProcessingResult: Object containing processing results and status
         """
-        pdf_path, output_dir, force = args
+        write_images = True
+        if len(args) == 4:
+            pdf_path, output_dir, force, write_images = args
+        else:
+            pdf_path, output_dir, force = args
         try:
-            return self._process_pdf(pdf_path, output_dir, force)
+            return self._process_pdf(pdf_path, output_dir, force, write_images=write_images)
         except Exception as e:
             logger.error(f"Failed to process PDF file {pdf_path}: {e}\n{traceback.format_exc()}")
             return ProcessingResult(
@@ -1030,14 +1048,17 @@ class DirectoryProcessor:
                 success=False
             )
 
-    def _process_pdf(self, pdf_path: Path, output_dir: Path, force: bool = False) -> ProcessingResult:
+    def _process_pdf(self, pdf_path: Path, output_dir: Path, force: bool = False,
+                     write_images: bool = True) -> ProcessingResult:
         """Process a single PDF file.
-        
+
         Args:
             pdf_path: Path to the PDF file
             output_dir: Directory to store the output
             force: Whether to force reprocessing
-            
+            write_images: Whether to render/write per-page images (PNGs). If False,
+                only text/markdown is extracted (much faster).
+
         Returns:
             ProcessingResult: Object containing processing results and status
         """
@@ -1078,10 +1099,10 @@ class DirectoryProcessor:
             shutil.copy2(pdf_path, simple_pdf)
             logger.debug(f"Created copy for processing: {simple_pdf}")
         
-        # Process PDF to markdown with images
+        # Process PDF to markdown (images only when write_images is True)
         md_text = pymupdf4llm.to_markdown(
             str(simple_pdf),
-            write_images=True,
+            write_images=write_images,
             image_path=str(output_dir),
             show_progress=False  # Disable pymupdf4llm progress bar
         )
