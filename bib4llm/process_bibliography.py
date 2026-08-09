@@ -244,6 +244,9 @@ def standalone_process_entry(args):
                     str(simple_pdf),
                     write_images=write_images,
                     image_path=str(entry_dir),
+                    # In text-only mode, cap per-page vector-graphics analysis; without this,
+                    # figure-dense PDFs hang for many minutes in pymupdf4llm's drawing parser.
+                    graphics_limit=(5000 if not write_images else None),
                     show_progress=False  # Disable pymupdf4llm progress bar
                 )
                 
@@ -648,6 +651,7 @@ class BibliographyProcessor:
             str(simple_pdf),
             write_images=write_images,
             image_path=str(entry_dir),
+            graphics_limit=(5000 if not write_images else None),
             show_progress=False  # Disable pymupdf4llm progress bar
         )
         
@@ -1104,6 +1108,7 @@ class DirectoryProcessor:
             str(simple_pdf),
             write_images=write_images,
             image_path=str(output_dir),
+            graphics_limit=(5000 if not write_images else None),
             show_progress=False  # Disable pymupdf4llm progress bar
         )
         
